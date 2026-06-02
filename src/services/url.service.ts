@@ -52,4 +52,12 @@ export class UrlService{
 
         })
     }
+
+    async stats(shortCode : string){
+        return  prisma.url.findUnique({
+            where:{
+                shortCode
+            }
+        })
+    }
 }

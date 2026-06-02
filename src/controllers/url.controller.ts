@@ -57,3 +57,24 @@ export async function redirect(req : Request<RedirectParams>, res : Response){
     });
   }
 }
+
+export async function findStats(req : Request<RedirectParams>, res: Response) {
+    try{
+        const {shortCode} = req.params;
+        const url = await urlService.stats(shortCode)
+        if(!url){
+            return res.status(404).json({
+            message : "url not found for this particular code"
+            })
+        }
+        return res.status(200).json({
+        ...url,
+        id : url.id.toString()
+    });
+    }catch{
+        return res.status(500).json({
+      message: "Internal Server Errorss",
+    });
+    }
+}
+
