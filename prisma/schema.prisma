@@ -16,7 +16,7 @@ datasource db {
 model Url {
   id          BigInt   @id @default(autoincrement())
 
-  originalUrl String  @unique
+  originalUrl String  
 
   shortCode   String?  @unique
 

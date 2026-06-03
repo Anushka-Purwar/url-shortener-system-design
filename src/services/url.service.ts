@@ -1,21 +1,31 @@
+import { execSync } from "node:child_process";
 import {prisma} from "../config/prisma";
 import { encodebase62 } from "../utils/base62";
+import { error } from "node:console";
+import { ConflictError } from "../errors/url.errors";
 
 export class UrlService{
-    async createUrl(originalUrl : string){
-        const existing = await prisma.url.findUnique({
-            where : {
-                originalUrl,
+    async createUrl(originalUrl : string, customAlias? :string){
+        
+        if(customAlias){
+            const aliasExsist = await prisma.url.findUnique({
+                where: {
+                    shortCode : customAlias
+                }
+            })
+            if (aliasExsist) {
+                throw new ConflictError(
+                    "Alias already exists"
+                );
             }
-        });
+        }
 
-        if(existing) return existing;
+
         const url = await prisma.url.create({
             data : {
                 originalUrl
             }
         });
-
         const shortUrl = encodebase62(url.id);
 
         const updateUrl = await prisma.url.update({
@@ -23,7 +33,7 @@ export class UrlService{
                 id : url.id
             },
             data : {
-                shortCode : shortUrl
+                shortCode : customAlias ?? shortUrl
             }
 
         });
