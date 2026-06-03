@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { UrlService } from "../services/url.service.js";
-import { validateUrl } from "../validators/url.validation.js";
+import { updateExpirationSchema, validateActiveBool, validateUrl } from "../validators/url.validation.js";
 import z from "zod";
 import { ConflictError } from "../errors/url.errors.js";
 
@@ -17,7 +17,7 @@ export async function createShortUrl(req: Request, res: Response) {
             errors : z.prettifyError(valid.error)
         })
     }
-    const result = await urlService.createUrl(valid.data.originalUrl, valid.data.customAlias);
+    const result = await urlService.createUrl(valid.data.originalUrl, valid.data.customAlias, valid.data.expiresAt);
 
     return res.status(200).json({
         ...result,
@@ -30,8 +30,6 @@ export async function createShortUrl(req: Request, res: Response) {
                 message: error.message,
             });
         }
-
-        console.error(error);
 
         return res.status(500).json({
             message: "Internal Server Error",
@@ -62,10 +60,18 @@ export async function redirect(req : Request<RedirectParams>, res : Response){
             message : "url not found for this particular code"
         })
     }
+
+    if(!url.isActive || (url.expiresAt && url.expiresAt < new Date())){
+        return res.status(410).json({
+            message: "This link is no longer active"
+        })
+    }
+
     await urlService.incrementClicks(shortCode);
+
     return res.redirect(url.originalUrl);
-  } 
-  catch (error) {
+
+  } catch (error) {
     return res.status(500).json({
       message: "Internal Server Errorss",
     });
@@ -89,6 +95,75 @@ export async function findStats(req : Request<RedirectParams>, res: Response) {
         return res.status(500).json({
       message: "Internal Server Errorss",
     });
+    }
+}
+
+// to update expiration link
+
+export async function updateExpiration(req: Request, res: Response){
+    const {shortCode} = req.params
+    const {expiresAt} = req.body
+
+    const valid = updateExpirationSchema.safeParse({shortCode, expiresAt})
+
+    if(!valid.success){
+        return res.status(400).json({
+            errors : z.prettifyError(valid.error)
+        })
+    }
+
+    const url = await urlService.updateExpirationDate(valid.data.shortCode,new Date(valid.data.expiresAt))
+
+    if(!url){
+        return res.status(404).json({
+            message : "url not found for this particular code"
+        })
+    }
+
+    return res.status(200).json({
+        message: "Expiry date updated successfully",
+        shortCode: url.shortCode,
+        expiresAt: url.expiresAt,
+    })
+}
+
+// Function to make link active or inactive
+export async function updateStatus(req: Request, res: Response){
+    try{
+        const { shortCode} = req.params
+        const {isActive} = req.body
+    
+        const valid = validateActiveBool.safeParse({shortCode,isActive})
+    
+        if(!valid.success){
+            return res.status(400).json({
+                errors : z.prettifyError(valid.error)
+            })
+        }
+    
+        const url = await urlService.updateLinkActivation(valid.data.isActive,valid.data.shortCode)
+    
+        if(!url){
+            return res.status(404).json({
+                message : "url not found for this particular code"
+            })
+        }
+    
+        return res.status(200).json({
+            message: "Link updates sucessfully",
+            shortCode: url.shortCode,
+            isActive : url.isActive
+        })
+    }catch (error) {
+        if (error instanceof ConflictError) {
+            return res.status(409).json({
+                message: error.message,
+            });
+        }
+
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
     }
 }
 
