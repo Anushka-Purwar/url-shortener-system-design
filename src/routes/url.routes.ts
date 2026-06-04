@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createShortUrl, updateExpiration } from "../controllers/url.controller";
+import { createShortUrl, deleteUrl, updateExpiration } from "../controllers/url.controller";
 import { healthCheck } from "../controllers/url.controller";
 import { redirect } from "../controllers/url.controller";
 import { findStats } from "../controllers/url.controller";
@@ -14,5 +14,6 @@ router.get("/:shortCode",redirect);
 router.get("/stats/:shortCode",findStats);
 router.patch("/updateExpiryDate/:shortCode", updateExpiration);
 router.patch("/linkStatus/:shortCode", updateStatus);
+router.patch("/deleteUrl/:shortCode", deleteUrl);
 
 export default router;
