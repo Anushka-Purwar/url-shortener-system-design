@@ -9,6 +9,14 @@ export class UrlService{
         await redis.del(shortCode);
     }
 
+    async findUrl(shortCode: string){
+        return  prisma.url.findUnique({
+        where: {
+            shortCode,
+            },
+        });
+    }
+
     /*--------service functions------------------*/
 
     //create url service
@@ -88,12 +96,8 @@ export class UrlService{
 
     //increment clicks based on how many hits user made in db
     async incrementClicks(shortCode : string){
-        const url = await prisma.url.findUnique({
-        where: {
-            shortCode,
-            },
-        });
 
+        const url =  await this.findUrl(shortCode)
         if (!url) {
             return null;
         }
@@ -113,12 +117,8 @@ export class UrlService{
 
     //service to get status of urls
     async stats(shortCode : string){
-        const url = await prisma.url.findUnique({
-        where: {
-            shortCode,
-            },
-        });
 
+        const url =  await this.findUrl(shortCode)
         if (!url) {
             return null;
         }
@@ -133,12 +133,8 @@ export class UrlService{
     // if alias and link already exsist and user need to update expiration date then patch 
 
     async updateExpirationDate(shortCode: string, expiresAt: Date){
-        const url = await prisma.url.findUnique({
-        where: {
-            shortCode,
-            },
-        });
 
+        const url =  await this.findUrl(shortCode)
         if (!url) {
             return null;
         }
@@ -157,12 +153,8 @@ export class UrlService{
 
     // update db for isActive
     async updateLinkActivation(isActive: boolean, shortCode: string){
-        const url = await prisma.url.findUnique({
-        where: {
-            shortCode,
-            },
-        });
 
+        const url =  await this.findUrl(shortCode)
         if (!url) {
             return null;
         }
@@ -181,12 +173,8 @@ export class UrlService{
 
     // deletedAt logic implementation
     async deleteUrlService(shortCode: string, deletedAt : Date){
-        const url = await prisma.url.findUnique({
-        where: {
-            shortCode,
-            },
-        });
-
+        
+        const url =  await this.findUrl(shortCode)
         if (!url) {
             return null;
         }
