@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { UrlService } from "../services/url.service.js";
-import { updateExpirationSchema, validateActiveBool, validateUrl } from "../validators/url.validation.js";
+import { updateExpirationSchema, validateActiveBool, validateDeletedAt, validateUrl } from "../validators/url.validation.js";
 import z from "zod";
 import { ConflictError } from "../errors/url.errors.js";
 
@@ -61,7 +61,7 @@ export async function redirect(req : Request<RedirectParams>, res : Response){
         })
     }
 
-    if(!url.isActive || (url.expiresAt && url.expiresAt < new Date())){
+    if(!url.isActive || (url.expiresAt && url.expiresAt < new Date()) || (url.deletedAt && url.deletedAt < new Date())){
         return res.status(410).json({
             message: "This link is no longer active"
         })
@@ -165,5 +165,41 @@ export async function updateStatus(req: Request, res: Response){
             message: "Internal Server Error",
         });
     }
+}
+
+export async function deleteUrl(req : Request, res : Response){
+    try{
+        const { shortCode} = req.params
+        const {deletedAt} = req.body
+    
+        const valid = validateDeletedAt.safeParse({shortCode,deletedAt})
+    
+        if(!valid.success){
+            return res.status(400).json({
+                errors : z.prettifyError(valid.error)
+            })
+        }
+    
+        const url = await urlService.deleteUrlService(valid.data.shortCode,new Date(valid.data.deletedAt))
+    
+        if(!url){
+            return res.status(404).json({
+                message : "url not found for this particular code"
+            })
+        }
+    
+        return res.status(200).json({
+            message: "Delete date added successfully",
+            shortCode: url.shortCode,
+            deletedAt : url.deletedAt
+        })
+    }catch (error) {
+        
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
+
+
 }
 

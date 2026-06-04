@@ -21,3 +21,8 @@ export const validateActiveBool = z.object({
     shortCode : z.string().min(1),
     isActive : z.boolean()
 })
+
+export const validateDeletedAt = z.object({
+    shortCode : z.string().min(1),
+    deletedAt: z.string().datetime()
+})

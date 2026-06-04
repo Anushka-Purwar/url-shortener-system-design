@@ -145,4 +145,27 @@ export class UrlService{
             }
         })
     }
+
+    // deletedAt logic implementation
+    async deleteUrlService(shortCode: string, deletedAt : Date){
+        const url = await prisma.url.findUnique({
+        where: {
+            shortCode,
+            },
+        });
+
+        if (!url) {
+            return null;
+        }
+
+        return prisma.url.update({
+            where:{
+                shortCode
+            },
+            data:{
+                deletedAt
+            }
+        })
+    }
+
 }
