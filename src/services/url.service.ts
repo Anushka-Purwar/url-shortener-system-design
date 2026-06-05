@@ -64,10 +64,8 @@ export class UrlService{
         const cache = await redis.get(shortCode)
 
         if (cache) {
-            console.log("CACHE HIT");
             return JSON.parse(cache);
         }
-        console.log("CACHE Miss");
 
 
         const url = await prisma.url.findUnique({
@@ -173,7 +171,7 @@ export class UrlService{
 
     // deletedAt logic implementation
     async deleteUrlService(shortCode: string, deletedAt : Date){
-        
+
         const url =  await this.findUrl(shortCode)
         if (!url) {
             return null;
@@ -189,6 +187,56 @@ export class UrlService{
                 deletedAt
             }
         })
+    }
+
+    //creating click event for better analytics
+    async clickEventService(shortCode: string){
+        return prisma.clickEvent.create({
+            data:{
+                shortCode
+            }
+        })
+    }
+
+    //fetching click analytics from clickEvent model
+    async fetchAnalytics(shortCode: string){
+
+        const [totalClicks, last24Hours, last7Days] = await Promise.all([
+            prisma.clickEvent.count({
+                where: {
+                    shortCode,
+                } 
+            }),
+            prisma.clickEvent.count({
+                where: {
+                    shortCode,
+                    clickedAt: {
+                        gte: new Date(
+                            Date.now() -
+                            24 * 60 * 60 * 1000
+                        ),
+                    },
+                },
+            }),
+            prisma.clickEvent.count({
+            where: {
+                shortCode,
+                clickedAt: {
+                    gte: new Date(
+                        Date.now() -
+                        7 * 24 * 60 * 60 * 1000
+                    ),
+                },
+            },
+        })
+        ])
+
+    
+        return {
+            totalClicks,
+            last24Hours,
+            last7Days,
+        };
     }
 
 }
