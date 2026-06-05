@@ -13,9 +13,9 @@ router.post("/create",createUrlLimiter, createShortUrl);
 router.get("/healthCheck", healthCheck);
 router.get("/:shortCode",getUrlLimiter,redirect);
 router.get("/stats/:shortCode",findStats);
-router.patch("/updateExpiryDate/:shortCode", getUrlLimiter, updateExpiration);
+router.patch("/expiration/:shortCode", getUrlLimiter, updateExpiration);
 router.patch("/linkStatus/:shortCode", getUrlLimiter, updateStatus);
 router.patch("/deleteUrl/:shortCode",getUrlLimiter, deleteUrl);
-router.get("/fetchAnalytics/:shortCode", getAnalyticsLimiter, fetchAnalyticController);
+router.get("/analytics/:shortCode", getAnalyticsLimiter, fetchAnalyticController);
 
 export default router;
