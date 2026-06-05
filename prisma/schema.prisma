@@ -32,3 +32,11 @@ model Url {
 
   deletedAt   DateTime?
 }
+
+model ClickEvent{
+  id    BigInt    @id @default(autoincrement())
+
+  shortCode   String
+
+  clickedAt   DateTime @default(now())
+}

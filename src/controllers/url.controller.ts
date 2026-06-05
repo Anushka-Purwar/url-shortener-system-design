@@ -67,7 +67,10 @@ export async function redirect(req : Request<RedirectParams>, res : Response){
         })
     }
 
-    await urlService.incrementClicks(shortCode);
+    await Promise.all([
+        urlService.incrementClicks(shortCode),
+        urlService.clickEventService(shortCode)
+    ])
 
     return res.redirect(url.originalUrl);
 
@@ -200,6 +203,23 @@ export async function deleteUrl(req : Request, res : Response){
         });
     }
 
+
+}
+
+export async function fetchAnalyticController(req: Request<RedirectParams>, res : Response){
+    try{
+        const { shortCode } = req.params;
+
+        const analytics = await urlService.fetchAnalytics(shortCode);
+
+        return res.status(200).json(
+            analytics
+        );
+    }catch(error){
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
 
 }
 
