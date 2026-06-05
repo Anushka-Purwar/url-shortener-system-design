@@ -1,13 +1,10 @@
 import { Request, Response } from "express";
 import { UrlService } from "../services/url.service.js";
-import { updateExpirationSchema, validateActiveBool, validateDeletedAt, validateUrl } from "../validators/url.validation.js";
+import { updateExpirationSchema, validateActiveBool, validateDeletedAt, validateShortCode, validateUrl } from "../validators/url.validation.js";
 import z from "zod";
 import { ConflictError } from "../errors/url.errors.js";
 
 const urlService = new UrlService();
-interface RedirectParams {
-  shortCode: string;
-}
 
 export async function createShortUrl(req: Request, res: Response) {
   try {
@@ -49,11 +46,18 @@ export async function healthCheck(req : Request, res : Response){
     }
 }
 
-export async function redirect(req : Request<RedirectParams>, res : Response){
+export async function redirect(req : Request, res : Response){
     try {
     const { shortCode } = req.params;
+    const valid = validateShortCode.safeParse({shortCode})
 
-    const url = await urlService.redirect(shortCode)
+    if(!valid.success){
+        return res.status(400).json({
+            errors : z.prettifyError(valid.error)
+        })
+    }
+
+    const url = await urlService.redirect(valid.data.shortCode)
 
     if(!url){
         return res.status(404).json({
@@ -68,8 +72,8 @@ export async function redirect(req : Request<RedirectParams>, res : Response){
     }
 
     await Promise.all([
-        urlService.incrementClicks(shortCode),
-        urlService.clickEventService(shortCode)
+        urlService.incrementClicks(valid.data.shortCode),
+        urlService.clickEventService(valid.data.shortCode)
     ])
 
     return res.redirect(url.originalUrl);
@@ -81,10 +85,17 @@ export async function redirect(req : Request<RedirectParams>, res : Response){
   }
 }
 
-export async function findStats(req : Request<RedirectParams>, res: Response) {
+export async function findStats(req : Request, res: Response) {
     try{
         const {shortCode} = req.params;
-        const url = await urlService.stats(shortCode)
+        const valid = validateShortCode.safeParse({shortCode})
+
+        if(!valid.success){
+            return res.status(400).json({
+                errors : z.prettifyError(valid.error)
+            })
+        }
+        const url = await urlService.stats(valid.data.shortCode)
         if(!url){
             return res.status(404).json({
             message : "url not found for this particular code"
@@ -206,11 +217,18 @@ export async function deleteUrl(req : Request, res : Response){
 
 }
 
-export async function fetchAnalyticController(req: Request<RedirectParams>, res : Response){
+export async function fetchAnalyticController(req: Request, res : Response){
     try{
         const { shortCode } = req.params;
+        const valid = validateShortCode.safeParse({shortCode})
 
-        const analytics = await urlService.fetchAnalytics(shortCode);
+        if(!valid.success){
+            return res.status(400).json({
+                errors : z.prettifyError(valid.error)
+            })
+        }
+
+        const analytics = await urlService.fetchAnalytics(valid.data.shortCode);
 
         return res.status(200).json(
             analytics

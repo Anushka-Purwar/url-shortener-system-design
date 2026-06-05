@@ -26,3 +26,7 @@ export const validateDeletedAt = z.object({
     shortCode : z.string().min(1),
     deletedAt: z.string().datetime()
 })
+
+export const validateShortCode = z.object({
+    shortCode : z.string().min(1),
+})
