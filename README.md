@@ -1,6 +1,6 @@
 # 🔗 URL Shortener
 
-A production-inspired URL Shortener built with TypeScript, Express, PostgreSQL, Prisma, and Redis. Main focus to undersatnd how system design works for simple problems and how decision making drives a real world project.
+A production-inspired URL Shortener built with TypeScript, Express, PostgreSQL, Prisma, and Redis. Main focus to understand how system design works and how decision making drives a real world project.
 
 ## ✨ Features (-- V1.0)
 
